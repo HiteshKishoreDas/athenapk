@@ -1,0 +1,21 @@
+module purge
+
+module load cuda/11.6
+module load clang/18
+module load intel/21.7.1
+module load openmpi/4
+module load hdf5-mpi/1.14.1
+module load gcc/11
+
+module list
+
+##Before compiling:
+git submodule init
+git submodule update
+
+cd /ptmp/mpa/hitesh/athenapk
+rm -r build-gpu
+
+cmake -S. -Bbuild-gpu -DKokkos_ARCH_SKX=ON -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -D CMAKE_CXX_COMPILER=${PWD}/external/Kokkos/bin/nvcc_wrapper -DPARTHENON_ENABLE_HOST_COMM_BUFFERS=ON
+
+cmake --build build-gpu -j 8
