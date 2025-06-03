@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(
     1,
-    "./external/parthenon" + "/scripts/python/packages/parthenon_tools/parthenon_tools",
+    "../external/parthenon" + "/scripts/python/packages/parthenon_tools/parthenon_tools",
 )
 
 try:
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         zs = tracers.z
         ids = tracers.Get("id")
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot(projection="3d")
 
         ax.scatter(xs, ys, zs, s=1, c=ids)
