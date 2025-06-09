@@ -47,7 +47,7 @@ using utils::few_modes_ft::FewModesFT;
 
 // TODO(?) until we are able to process multiple variables in a single hst function call
 // we'll use this enum to identify the various vars.
-enum class HstQuan { Ms, Ma, pb, DeltaEcool };
+enum class HstQuan { Ms, Ma, pb, DeltaEcool, ColdMass };
 
 // Compute the local sum of either the sonic Mach number,
 // alfvenic Mach number, or plasma beta as specified by `hst_quan`.
@@ -56,6 +56,8 @@ Real TurbulenceHst(MeshData<Real> *md) {
   auto pmb = md->GetBlockData(0)->GetBlockPointer();
   auto hydro_pkg = pmb->packages.Get("Hydro");
   const auto gamma = hydro_pkg->Param<Real>("AdiabaticIndex");
+  const auto mean_molecular_mass_by_kb = hydro_pkg->Param<Real>("mbar_over_kb");
+  const auto Tcold = hydro_pkg->Param<Real>("cooling/Tcold");
 
   if (hst_quan == HstQuan::DeltaEcool &&
       hydro_pkg->AllParams().hasKey("cooling/total_deltaE_this_cycle")) {
@@ -95,6 +97,11 @@ Real TurbulenceHst(MeshData<Real> *md) {
           lsum += std::sqrt(vel2) / c_s * coords.CellVolume(k, j, i);
         }
 
+        const auto Tgas = mean_molecular_mass_by_kb * prim(IPR, k, j, i) / prim(IDN, k, j, i);
+        if (hst_quan == HstQuan::ColdMass && Tgas <= Tcold){
+          lsum += prim(IDN, k, j, i) * coords.CellVolume(k, j, i); 
+        }
+
         if (fluid == Fluid::glmmhd) {
           const auto B2 = (prim(IB1, k, j, i) * prim(IB1, k, j, i) +
                            prim(IB2, k, j, i) * prim(IB2, k, j, i) +
@@ -124,6 +131,9 @@ void ProblemInitPackageData(ParameterInput *pin, parthenon::StateDescriptor *pkg
   hst_vars.emplace_back(parthenon::HistoryOutputVar(parthenon::UserHistoryOperation::sum,
                                                     TurbulenceHst<HstQuan::DeltaEcool>,
                                                     "DeltaEcool"));
+  hst_vars.emplace_back(parthenon::HistoryOutputVar(parthenon::UserHistoryOperation::sum,
+                                                    TurbulenceHst<HstQuan::ColdMass>,
+                                                    "ColdMass"));
   if (fluid == Fluid::glmmhd) {
     hst_vars.emplace_back(parthenon::HistoryOutputVar(
         parthenon::UserHistoryOperation::sum, TurbulenceHst<HstQuan::Ma>, "Ma"));
@@ -174,8 +184,13 @@ void ProblemInitPackageData(ParameterInput *pin, parthenon::StateDescriptor *pkg
       pin->GetReal("problem/turbulence", "corr_time"); // forcing autocorrelation time
   pkg->AddParam<>("turbulence/t_corr", t_corr);
 
-  Real sol_weight = pin->GetReal("problem/turbulence", "sol_weight"); // solenoidal weight
+  auto sol_weight = pin->GetReal("problem/turbulence", "sol_weight"); // solenoidal weight
   pkg->AddParam<>("turbulence/sol_weight", sol_weight);
+
+  auto Tcold =
+      pin->GetOrAddReal("cooling", "Tcold", 10000); // peak of the forcing spec
+  pkg->AddParam<>("cooling/Tcold", Tcold);
+
 
   // list of wavenumber vectors
   auto k_vec = ParArray2D<Real>("k_vec", 3, num_modes);
