@@ -121,6 +121,29 @@ Real TurbulenceHst(MeshData<Real> *md) {
   return sum;
 }
 
+void TurbUnsplitSrcTerm(MeshData<Real> *md, const parthenon::SimTime &tm, const Real beta_dt) {
+  auto cons_pack = md->PackVariables(std::vector<std::string>{"cons"});
+  const auto &prim_pack = md->PackVariables(std::vector<std::string>{"prim"});
+
+  IndexRange ib = md->GetBlockData(0)->GetBoundsI(IndexDomain::interior);
+  IndexRange jb = md->GetBlockData(0)->GetBoundsJ(IndexDomain::interior);
+  IndexRange kb = md->GetBlockData(0)->GetBoundsK(IndexDomain::interior);
+
+  auto hydro_pkg = md->GetBlockData(0)->GetBlockPointer()->packages.Get("Hydro");
+  const auto GlobalHeating = hydro_pkg->Param<Real>("cooling/global_heating");
+
+  parthenon::par_for(
+      DEFAULT_LOOP_PATTERN, "HeatingUnsplitSource", parthenon::DevExecSpace(), 0,
+      cons_pack.GetDim(5) - 1, kb.s, kb.e, jb.s, jb.e, ib.s, ib.e,
+      KOKKOS_LAMBDA(const int b, const int k, const int j, const int i) {
+        auto &cons = cons_pack(b);
+
+        // Global uniform heating
+        cons(IEN, k, j, i) += beta_dt * GlobalHeating;
+
+      });
+}
+
 void ProblemInitPackageData(ParameterInput *pin, parthenon::StateDescriptor *pkg) {
   // Step 1. Enlist history output information
   auto hst_vars = pkg->Param<parthenon::HstVar_list>(parthenon::hist_param_key);
@@ -190,6 +213,10 @@ void ProblemInitPackageData(ParameterInput *pin, parthenon::StateDescriptor *pkg
   auto Tcold =
       pin->GetOrAddReal("cooling", "Tcold", 10000); // peak of the forcing spec
   pkg->AddParam<>("cooling/Tcold", Tcold);
+
+  auto GlobalHeating =
+      pin->GetOrAddReal("cooling", "global_heating", 0.0); // peak of the forcing spec
+  pkg->AddParam<>("cooling/global_heating", GlobalHeating);
 
 
   // list of wavenumber vectors

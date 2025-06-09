@@ -110,6 +110,7 @@ int main(int argc, char *argv[]) {
   } else if (problem == "turbulence") {
     pman.app_input->MeshProblemGenerator = turbulence::ProblemGenerator;
     Hydro::ProblemInitPackageData = turbulence::ProblemInitPackageData;
+    Hydro::ProblemSourceUnsplit = turbulence::TurbUnsplitSrcTerm;
     Tracers::ProblemInitTracerData = turbulence::ProblemInitTracerData;
     Tracers::ProblemFillTracers = turbulence::ProblemFillTracers;
     Hydro::ProblemSourceFirstOrder = turbulence::Driving;

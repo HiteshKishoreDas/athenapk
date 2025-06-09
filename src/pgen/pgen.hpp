@@ -126,6 +126,7 @@ namespace turbulence {
 using namespace parthenon::driver::prelude;
 
 void ProblemGenerator(Mesh *pm, parthenon::ParameterInput *pin, MeshData<Real> *md);
+void TurbUnsplitSrcTerm(MeshData<Real> *md, const parthenon::SimTime &tm, const Real beta_dt);
 void ProblemInitPackageData(ParameterInput *pin, parthenon::StateDescriptor *pkg);
 void ProblemInitTracerData(ParameterInput *pin, parthenon::StateDescriptor *pkg);
 void Driving(MeshData<Real> *md, const parthenon::SimTime &tm, const Real dt);

@@ -99,6 +99,7 @@ enable_cooling = tabular                # To disable, set to `none`
 table_filename = /ptmp/mpa/hitesh/athenapk/inputs/cooling_tables/schure.cooling_1.0Z    # Path to the cooling table (in a text file)
 lambda_units_cgs = 1                    # Conversion factor of the cooling rate relative to CGS units
 Tcold = 8000
+global_heating = 0.1
 
 integrator = townsend              # Other possible options are `rk12` and `rk45` for error bound subcycling
 cfl = 0.1                          # Restrict global timestep to `cfl*e / dedt`, i.e., some fraction of change per cycle in the specific internal energy (i.e., temperature)
