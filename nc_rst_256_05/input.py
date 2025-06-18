@@ -7,7 +7,7 @@ nx_mb = [64, 64, 64]  # Number of grid points in each direction for the mesh blo
 L_box = 1
 rho0 = 1.0  # Reference density
 T0 = 1e6 #in K
-M = 0.75
+M = 0.5
 
 k_peak = 2.0
 
@@ -39,9 +39,4 @@ enable_cool = 'none'
 global_heat = 0
 
 rescale_time = -1.0
-rescale_Ms = 0.75
-
-#==========#
-logT0 = np.log10(T0)
-Lambda_T0 = Lambda_interp_logT(logT0, "/ptmp/mpa/ankitad/athenapk/inputs/cooling_tables/schure.cooling_1.0Z")
-global_heat = n**2 * Lambda_T0
+rescale_Ms = 0.5

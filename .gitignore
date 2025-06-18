@@ -51,3 +51,6 @@ out.*
 *.out
 *.hst
 *.csv
+*.out*
+*.err*
+**__pycache__
